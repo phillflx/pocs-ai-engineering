@@ -1,0 +1,23 @@
+[project]
+name = "pocs-automacao"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Philipe Felix", email = "philipe.felixdossantos@gmail.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "gradio>=6.28.0",
+    "ollama>=0.6.2",
+    "openai>=3.19.2",
+    "python-dotenv>=1.2.3",
+    "selenium>=4.49.0",
+]
+
+[project.scripts]
+pocs-automacao = "pocs_automacao:main"
+
+[build-system]
+requires = ["uv_build>=0.12.11,<0.13.0"]
+build-backend = "uv_build"
