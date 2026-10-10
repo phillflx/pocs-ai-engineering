@@ -27,6 +27,13 @@ GEMINI_URL="https://generativelanguage.googleapis.com/v1beta/openai/"
 MODEL="gemini-3.5-flash-lite"
 API_KEY = os.getenv("GOOGLE_APY_KEY")
 
+LINKEDIN_SEARCH_URL = "https://www.linkedin.com/jobs/search-results/"
+SEARCH_LIST_CONTAINER_CSS_SELECTOR = '[componentkey="SearchResultsMainContent"]'
+JOB_CARD_CSS_SELECTOR = '[role="button"]'
+# sample component key for job card element: job-card-component-ref-4474544575, where the number is the job ID. The job ID can be used to construct a direct URL to the job posting.
+JOB_CARD_COMPONENT_KEY_REGEX = r"job-card-component-ref-(\d+)"
+LINKEDIN_JOB_URL = "https://www.linkedin.com/jobs/view/"
+
 @dataclass
 class Job:
     title: str
@@ -50,23 +57,17 @@ def search_linkedin_with_selenium(title: str, location: str = "", limit: int = 1
     WebDriver to be set up.
     It opens linkedin and follows this steps:
         1. Opens the LinkedIn job search page with the given title and location.
-        2. Iterate through the job cards
-        3. Click on each job card to load the job details
-        4. Extract the job description from the job details panel
-        5. Store the job information in a Job dataclass and add it to the jobs list
+        2. Scrolls through the results and collects job ids from the job cards.
+        3. For each job id, it opens the job page and uses the llm to get the job details in json format.
     Returns a list of Job dataclasses with the job information and description.
     """
-    jobs_cards_class = "base-card"
-    job_description_class = "jobs-description__container"
-
-
 
 def search_linkedin(title: str, location: str = "", limit: int = 10) -> list[Job]:
     """Fetch public job-search results. May return fewer results if LinkedIn
     changes or rate-limits its public page; no login or scraping evasion used.
     """
     query = urllib.parse.urlencode({"keywords": title, "location": location})
-    url = f"https://www.linkedin.com/jobs/search-results/?{query}"
+    url = f"{LINKEDIN_SEARCH_URL}?{query}"
     request = urllib.request.Request(
         url,
         headers={"User-Agent": "Mozilla/5.0 (compatible; JobSearchAssistant/1.0)"},
@@ -108,7 +109,7 @@ def search_linkedin(title: str, location: str = "", limit: int = 10) -> list[Job
     return jobs
 
 
-def draft_application(job: Job, profile: str, model: str = "gpt-4.1-mini") -> str:
+def draft_application(job: Job, profile: str, model: str = MODEL) -> str:
     """Draft a short, factual note. Do not invent qualifications."""
     if not API_KEY:
         return ""
